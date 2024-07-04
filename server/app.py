@@ -73,24 +73,29 @@ def get_pizzas():
 
     return make_response(body, 200)
 
+
+
 @app.post("/restaurant_pizzas")
 def create():
-    new_restaurant_pizzas = RestaurantPizza(
-        price = request.form.get("price"),
-        pizza_id = request.form.get("pizza_id"),
-        restaurant_id = request.form.get("restaurant_id")
-    )
-    if new_restaurant_pizzas:
-        db.session.add(new_restaurant_pizzas)
-        db.session.commit()
-        restaurant_pizza_dict = new_restaurant_pizzas.to_dict()
-        body = restaurant_pizza_dict
-        status = 200
+    data = request.get_json()
+    
+    if "price" not in data or "pizza_id" not in data or "restaurant_id" not in data:
+        body = {"error": "Missing required fields"}
+        status = 400
     else:
-        body = {"errors": "validation errors"}
-        status = 409
+        try:
+            restaurant_pizza = RestaurantPizza(price=data["price"], pizza_id=data["pizza_id"], restaurant_id=data["restaurant_id"])
+            db.session.add(restaurant_pizza)
+            db.session.commit()
+            
+            body = restaurant_pizza.to_dict()
+            status = 201
+        except:
+            body = {"errors": ["validation errors"]}
+            status = 400
     
     return make_response(body, status)
+
 
     
     
